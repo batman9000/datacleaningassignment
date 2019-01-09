@@ -41,8 +41,6 @@ colnames(fulldatameanstd)<-variablenames3
 ##Summary stats by average of each variable for each activity and each subject.
 summarystats<-fulldatameanstd %>%
   group_by(subjectid, activity) %>%
-  summarize_if(is.double,mean) %>%
-  group_by(subjectid, activity) %>%
-  summarise(mean=mean(tBodyAccmeanX:fBodyBodyGyroJerkMagmeanFreq))
+  summarize_if(is.double,mean) 
 
-write.table(summarystats,file="summarystats.txt")
+write.table(summarystats,file="summarystats.txt", row.name=FALSE)
