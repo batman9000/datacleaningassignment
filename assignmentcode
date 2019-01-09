@@ -1,0 +1,48 @@
+#load libraries
+library(dplyr)
+library(tidyr)
+
+
+##Importing data files
+testdata<-read.table("./test/X_test.txt")
+testlabel<- read.table("./test/y_test.txt")
+testsubject<- read.table("./test/subject_test.txt")
+traindata<-read.table("./train/X_train.txt")
+trainlabel<- read.table("./train/y_train.txt")
+trainsubject<- read.table("./train/subject_train.txt")
+
+#import variable names and activity label
+variablenames<-read.table("features.txt",colClasses = c("numeric","character"))
+activitylabel<-read.table("activity_labels.txt",colClasses = c("numeric","character"))
+variablenames<-variablenames[,2]
+
+#Merging test and train data and giving labels - final data is full data
+fulltestdata<-cbind(testsubject,testlabel,datatype="test",testdata)
+fulltraindata<-cbind(trainsubject,trainlabel,datatype="train",traindata)
+fulldata<-rbind(fulltestdata,fulltraindata)
+colnames(fulldata)<-c("subjectid", "activity", "datatype", variablenames)
+
+##Task 3: changing activity to decriptive by changing to factor
+fulldata$activity<-factor(fulldata$activity, levels=activitylabel[,1],labels=activitylabel[,2])
+fulldata$subjectid<-as.factor(fulldata$subjectid)
+
+##extracting only means and std
+##find the column names with mean or std 
+##then extract only those columns 0 final data is fulldatameanstd
+variablenames2<-colnames(fulldata)
+meanstdindices<-grep("mean|std",variablenames2)
+fulldatameanstd<-fulldata[,c(1,2,3,meanstdindices)]
+
+##Appropriately labels the data set by removing non-letters in variable
+variablenames3<-colnames(fulldatameanstd)
+variablenames3<-gsub("[^a-zA-Z]","",variablenames3)
+colnames(fulldatameanstd)<-variablenames3
+
+##Summary stats by average of each variable for each activity and each subject.
+summarystats<-fulldatameanstd %>%
+  group_by(subjectid, activity) %>%
+  summarize_if(is.double,mean) %>%
+  group_by(subjectid, activity) %>%
+  summarise(mean=mean(tBodyAccmeanX:fBodyBodyGyroJerkMagmeanFreq))
+
+write.table(summarystats,file="summarystats.txt")
